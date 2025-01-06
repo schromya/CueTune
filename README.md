@@ -2,6 +2,12 @@
 
 This is the start of an ESP32 music/audio player inspired by [PhonieBox](https://github.com/MiczFlor/RPi-Jukebox-RFID)
 
+
+## Progress
+Program prints out RFID tag details when tag comes close.
+
+
+
 ## 1. Prerequisites 
 
 ### a. Aquire Materials
@@ -63,5 +69,3 @@ To run this code, make sure the ESP32 is connected open this repo in the Arduino
 
 
 
-## Progress
-Program prints out RFID tag details when tag comes close.
