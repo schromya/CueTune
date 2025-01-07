@@ -4,7 +4,7 @@ This is the start of an ESP32 music/audio player inspired by [PhonieBox](https:/
 
 
 ## Progress
-Program prints out RFID tag details when tag comes close.
+Starting to build simple server to display RFID data.
 
 
 
@@ -40,11 +40,14 @@ In the Arduino IDE, go to Tools > Board > Board Manger. Type in ESP32 and instal
 
 Now plug in the ESP32 to your computer and click on the new port that is added under "Select Board" on the top bar. A window with “Select Other Board and Port” should pop up. Under boards, filter and select “ESP32-WROOOM-DA Module”. Then click okay.
 
-Go to library (book symbol on left bar) and search for "MFRC522" and install "MFRC522 by GithubCommunity".
+Go to library (book symbol on left bar) and search for and install the following libraries:
+* MFRC522 by GithubCommunity
 
 
 ## 4. Running
-To run this code, make sure the ESP32 is connected open this repo in the Arduino IDE and press Verify (the check) and Upload (the arrow)
+To run this code, make sure the ESP32 is connected open this repo in the Arduino IDE and press Verify (the check) and Upload (the arrow).
+
+Once the upload is complete, you can connect the ESP32 webserver by using another device (smartphone, computer, etc) to connect to the "CueTune" network. The password is "password" (I know, very secure :P). Once that device is connected, use a webrowser to navigate to 192.168.1.2 where you can access the simple website called "Cue Tune".
 
 
 ## Troubleshooting

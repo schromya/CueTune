@@ -6,7 +6,6 @@
 #include <MFRC522.h> //library responsible for communicating with the module RFID-RC522
 #include <SPI.h> //library responsible for communicating of SPI bus
 
-
 #define SS_PIN    21
 #define RST_PIN   22
 
@@ -37,14 +36,23 @@ void loop() {
   server_loop();
 
     
+
+
+   //read_data();
+    //write_data();
+
+    
+
+}
+
+bool check_card() {
     // Reset the loop if no new card present on the sensor/reader. This saves the entire process when idle.
     if ( ! mfrc522.PICC_IsNewCardPresent())
-        return;
+        return false;
 
     // Select one of the cards
     if ( ! mfrc522.PICC_ReadCardSerial())
-        return;
-    Serial.println("Approach your reader card...");
+        return false;
 
     // Check for compatibility
     MFRC522::PICC_Type piccType = mfrc522.PICC_GetType(mfrc522.uid.sak);
@@ -52,13 +60,13 @@ void loop() {
         &&  piccType != MFRC522::PICC_TYPE_MIFARE_1K
         &&  piccType != MFRC522::PICC_TYPE_MIFARE_4K) {
         Serial.println(F("This only works with MIFARE Classic cards."));
-        return;
+        return false;
     }
 
-    read_data();
-    //write_data();
+    return true;
+}
 
-    
+void exit_card() {
     //instructs the PICC when in the ACTIVE state to go to a "STOP" state
     mfrc522.PICC_HaltA(); 
     // "stop" the encryption of the PCD, it must be called after communication with authentication, otherwise new communications can not be initiated
@@ -69,7 +77,10 @@ void loop() {
 /*
  * Read Data from the RFID Card/Tag
  */
-void read_data() {
+String read_data() {
+
+  if (!check_card()) return "";
+
   //prints the technical details of the card/tag
   mfrc522.PICC_DumpDetailsToSerial(&(mfrc522.uid)); 
   
@@ -86,7 +97,8 @@ void read_data() {
   if (status != MFRC522::STATUS_OK) {
     Serial.print(F("Authentication failed: "));
     Serial.println(mfrc522.GetStatusCodeName(status));
-    return;
+    exit_card();
+    return "";
   }
 
   //read data from block
@@ -94,30 +106,34 @@ void read_data() {
   if (status != MFRC522::STATUS_OK) {
     Serial.print(F("Reading failed: "));
     Serial.println(mfrc522.GetStatusCodeName(status));
-    return;
+    exit_card();
+    return "";
   }
 
-  Serial.print(F("\nData from block ["));
-  Serial.print(block);Serial.print(F("]: "));
-
- //prints read data
-  for (uint8_t i = 0; i < MAX_SIZE_BLOCK; i++)
-  {
-      Serial.write(buffer[i]);
+  // Convert buffer to String
+  String data_string = ""; // Initialize empty string
+  for (uint8_t i = 0; i < MAX_SIZE_BLOCK; i++) {
+      if (buffer[i] != 0) { // Exclude null or unused bytes
+          data_string += (char)buffer[i]; // Append character to string
+      }
   }
-  Serial.println(" ");
+
+  // Print the converted string
+  Serial.println(data_string);
+
+  exit_card();
+  return data_string;
 }
 
 
 /*
  * Write 'Hello' to the RFID Card/Tag
  */
-void write_data() {
+void write_data(String str) {
+
+  if (!check_card()) return;
   mfrc522.PICC_DumpDetailsToSerial(&(mfrc522.uid)); 
   
-  // waits 30 seconds dor data entry via Serial 
-  Serial.setTimeout(30000L) ;     
-  Serial.println(F("Enter the data to be written with the '#' character at the end \n[maximum of 16 characters]:"));
 
   //prepare the key - all keys are set to FFFFFFFFFFFFh
   for (byte i = 0; i < 6; i++) key.keyByte[i] = 0xFF;
@@ -125,7 +141,6 @@ void write_data() {
   
   byte block; //the block to operate
 
-  String str = "HELLO WORLD!"; //transforms the buffer data in String
   byte buffer[MAX_SIZE_BLOCK] = "";
   byte data_size = str.length();
 
@@ -150,6 +165,7 @@ void write_data() {
   if (status != MFRC522::STATUS_OK) {
     Serial.print(F("PCD_Authenticate() failed: "));
     Serial.println(mfrc522.GetStatusCodeName(status));
+    exit_card();
     return;
   }
   //else Serial.println(F("PCD_Authenticate() success: "));
@@ -159,11 +175,13 @@ void write_data() {
   if (status != MFRC522::STATUS_OK) {
     Serial.print(F("MIFARE_Write() failed: "));
     Serial.println(mfrc522.GetStatusCodeName(status));
+    exit_card();
     return;
   }
   else{
     Serial.println(F("MIFARE_Write() success!"));
   }
+  exit_card();
 }
 
 

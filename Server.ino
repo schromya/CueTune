@@ -18,8 +18,10 @@ void server_setup() {
   WiFi.softAPConfig(local_ip, gateway, subnet);
   delay(100);
   
-  server.on("/", handle_OnConnect);
-  server.onNotFound(handle_NotFound);
+  server.on("/", handle_on_connect);
+  server.on("/upload", handle_upload);
+  server.on("/rfid", handle_rfid);
+  server.onNotFound(handle_not_found);
   Serial.println("Wifi has started");
   server.begin();
   
@@ -31,11 +33,28 @@ void server_loop() {
 }
 
 
-void handle_OnConnect() {
+void handle_on_connect() {
   server.send(200, "text/html", SendHTML()); 
 }
 
-void handle_NotFound() {
+void handle_upload() {
+  Serial.print(F("Made it here!\n"));
+  String str = "YOLO";
+  write_data(str);
+  server.send(200, "application/json", "{\"data\": \"Uploaded data\"}");
+}
+
+void handle_rfid() {
+  String data = read_data();
+  Serial.print("HERE data " + data);
+  server.send(200, "application/json", "{\"data\": \"" + data + "\"}");
+
+}
+
+
+void handle_not_found() {
+  Serial.println("404 Not Found: " + server.uri()); // Print the request URI
+  server.send(404, "text/plain", "Not Found");
 }
 
 String SendHTML(){
@@ -51,11 +70,41 @@ String SendHTML(){
       <body>
           <div id="main">
               <H1> Cue Tune</H1>
+              <button id="upload_button" type="button">Upload Data!</button>
+              <p id="rfid_data"><p>
+              <button id="rfid_button" type="button">Get RFID data!</button>
           </div>
           <script>
+            document.getElementById('upload_button').addEventListener('click', () => {
+              fetch("upload", {
+                headers: { "Content-Type": "application/json"},
+                method: "POST",
+                body: "{}"
+              })
+              .then(res => {
+                  if (res.status != 200) alert("Sorry, there was an error uploading!")
+              })
+            });
+
+            document.getElementById('rfid_button').addEventListener('click', () => {
+              console.log("Clicked button!");
+              fetch("rfid", {
+                headers: { "Content-Type": "application/json"},
+                method: "GET",
+              })
+              .then(res => {
+                  if (res.status != 200) alert("Sorry, there was an error uploading!")
+                  else return res.json();
+              })
+              .then(json => {
+                console.log(json)
+                document.getElementById('rfid_data').innerText = "Data:" + json.data;
+              })
+            });
           </script>
       </body>
     </html>
   )delimiter";
   return ptr;
 }
+
