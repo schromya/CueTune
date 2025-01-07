@@ -35,14 +35,6 @@ void setup()  {
 void loop() {
   server_loop();
 
-    
-
-
-   //read_data();
-    //write_data();
-
-    
-
 }
 
 bool check_card() {
@@ -75,15 +67,13 @@ void exit_card() {
 
 
 /*
- * Read Data from the RFID Card/Tag
+ * Read Data from the RFID Card/Tag. If no data or cannot read card,
+ * returns empty string.
  */
 String read_data() {
 
   if (!check_card()) return "";
 
-  //prints the technical details of the card/tag
-  mfrc522.PICC_DumpDetailsToSerial(&(mfrc522.uid)); 
-  
   //prepare the key - all keys are set to FFFFFFFFFFFFh
   for (byte i = 0; i < 6; i++) key.keyByte[i] = 0xFF;
   
@@ -95,8 +85,7 @@ String read_data() {
   byte size = SIZE_BUFFER; //authenticates the block to operate
   status = mfrc522.PCD_Authenticate(MFRC522::PICC_CMD_MF_AUTH_KEY_A, block, &key, &(mfrc522.uid)); //line 834 of MFRC522.cpp file
   if (status != MFRC522::STATUS_OK) {
-    Serial.print(F("Authentication failed: "));
-    Serial.println(mfrc522.GetStatusCodeName(status));
+    Serial.print("Authentication failed: " + String(mfrc522.GetStatusCodeName(status)));
     exit_card();
     return "";
   }
@@ -104,8 +93,7 @@ String read_data() {
   //read data from block
   status = mfrc522.MIFARE_Read(block, buffer, &size);
   if (status != MFRC522::STATUS_OK) {
-    Serial.print(F("Reading failed: "));
-    Serial.println(mfrc522.GetStatusCodeName(status));
+    Serial.print("Reading failed: " + String(mfrc522.GetStatusCodeName(status)));
     exit_card();
     return "";
   }
@@ -118,8 +106,6 @@ String read_data() {
       }
   }
 
-  // Print the converted string
-  Serial.println(data_string);
 
   exit_card();
   return data_string;
@@ -127,13 +113,12 @@ String read_data() {
 
 
 /*
- * Write 'Hello' to the RFID Card/Tag
+ * Write inputed string to the RFID Card/Tag.
+ * Returns true if write was successful, else false.
  */
-void write_data(String str) {
+bool write_data(String str) {
 
-  if (!check_card()) return;
-  mfrc522.PICC_DumpDetailsToSerial(&(mfrc522.uid)); 
-  
+  if (!check_card()) return false;
 
   //prepare the key - all keys are set to FFFFFFFFFFFFh
   for (byte i = 0; i < 6; i++) key.keyByte[i] = 0xFF;
@@ -154,34 +139,28 @@ void write_data(String str) {
   }
  
   block = 1; //the block to operate
-  
-  Serial.println(str);
 
-   //authenticates the block to operate
-   //Authenticate is a command to hability a secure communication
+  //authenticates the block to operate
+  //Authenticate is a command to hability a secure communication
   status = mfrc522.PCD_Authenticate(MFRC522::PICC_CMD_MF_AUTH_KEY_A,
                                     block, &key, &(mfrc522.uid));
 
   if (status != MFRC522::STATUS_OK) {
-    Serial.print(F("PCD_Authenticate() failed: "));
-    Serial.println(mfrc522.GetStatusCodeName(status));
+    Serial.print("PCD_Authenticate() failed: " + String(mfrc522.GetStatusCodeName(status)));
     exit_card();
-    return;
+    return false;
   }
-  //else Serial.println(F("PCD_Authenticate() success: "));
- 
+
   //Writes in the block
   status = mfrc522.MIFARE_Write(block, buffer, MAX_SIZE_BLOCK);
   if (status != MFRC522::STATUS_OK) {
-    Serial.print(F("MIFARE_Write() failed: "));
-    Serial.println(mfrc522.GetStatusCodeName(status));
+    Serial.print("MIFARE_Write() failed: " + String(mfrc522.GetStatusCodeName(status)));
     exit_card();
-    return;
+    return false;
   }
-  else{
-    Serial.println(F("MIFARE_Write() success!"));
-  }
+
   exit_card();
+  return true;
 }
 
 

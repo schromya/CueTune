@@ -1,5 +1,6 @@
 #include <WiFi.h>
 #include <WebServer.h>
+#include <ArduinoJson.h>
 
 /* Put your SSID & Password */
 const char* ssid = "CueTune";  // Enter SSID here
@@ -22,9 +23,8 @@ void server_setup() {
   server.on("/upload", handle_upload);
   server.on("/rfid", handle_rfid);
   server.onNotFound(handle_not_found);
-  Serial.println("Wifi has started");
   server.begin();
-  
+
 }
 
 
@@ -38,15 +38,28 @@ void handle_on_connect() {
 }
 
 void handle_upload() {
-  Serial.print(F("Made it here!\n"));
-  String str = "YOLO";
-  write_data(str);
-  server.send(200, "application/json", "{\"data\": \"Uploaded data\"}");
+
+  String body = server.arg("plain");
+
+  // Parse JSON
+  DynamicJsonDocument data(1024);
+  DeserializationError error = deserializeJson(data, body);
+
+  if (error) {
+    Serial.println("JSON Parsing Error: " + String(error.c_str()));
+    server.send(400, "application/json", "{\"error\": \"Invalid JSON\"}");
+    return;
+  }
+  String str = data["data"];
+
+  bool success = write_data(str);
+  if (success) server.send(200, "application/json", "{\"data\": \"Uploaded data\"}");
+  else server.send(500, "application/json", "{\"data\": \"Error writing data\"}");
 }
+
 
 void handle_rfid() {
   String data = read_data();
-  Serial.print("HERE data " + data);
   server.send(200, "application/json", "{\"data\": \"" + data + "\"}");
 
 }
@@ -70,16 +83,20 @@ String SendHTML(){
       <body>
           <div id="main">
               <H1> Cue Tune</H1>
+              <label for="rfid_input">RFID Data</label>
+              <input type="text" id="rfid_input" />
+
               <button id="upload_button" type="button">Upload Data!</button>
               <p id="rfid_data"><p>
               <button id="rfid_button" type="button">Get RFID data!</button>
           </div>
           <script>
             document.getElementById('upload_button').addEventListener('click', () => {
+              const rfid_data = document.getElementById("rfid_input").value;
               fetch("upload", {
                 headers: { "Content-Type": "application/json"},
                 method: "POST",
-                body: "{}"
+                body: JSON.stringify({data: rfid_data})
               })
               .then(res => {
                   if (res.status != 200) alert("Sorry, there was an error uploading!")
@@ -87,7 +104,6 @@ String SendHTML(){
             });
 
             document.getElementById('rfid_button').addEventListener('click', () => {
-              console.log("Clicked button!");
               fetch("rfid", {
                 headers: { "Content-Type": "application/json"},
                 method: "GET",
@@ -97,7 +113,6 @@ String SendHTML(){
                   else return res.json();
               })
               .then(json => {
-                console.log(json)
                 document.getElementById('rfid_data').innerText = "Data:" + json.data;
               })
             });

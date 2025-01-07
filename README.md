@@ -6,6 +6,7 @@ This is the start of an ESP32 music/audio player inspired by [PhonieBox](https:/
 ## Progress
 Starting to build simple server to display RFID data.
 
+NOTE: Will probably want to turn webserver into websocket.Z
 
 
 ## 1. Prerequisites 
@@ -42,6 +43,7 @@ Now plug in the ESP32 to your computer and click on the new port that is added u
 
 Go to library (book symbol on left bar) and search for and install the following libraries:
 * MFRC522 by GithubCommunity
+* ArduinoJson by Benoit Blanchon
 
 
 ## 4. Running
