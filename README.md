@@ -19,7 +19,7 @@ NOTE: Will probably want to turn webserver into websocket.Z
 | USB Micro Data Cables                                      | 1            |
 | RFID-RC522                                                 | 1            |
 | RFID Card/Chip                                             | At least 1   |
-
+| Micro SD SDHC TF Card  Reader                              | 1            |
 
 ### b. Install required software
 Make sure you have the Arduino IDE. You may also need to install a UART Driver if the Arduino IDE does not recognize your ESP32 in Step 1c.
@@ -34,7 +34,7 @@ Make sure you have the Arduino IDE. You may also need to install a UART Driver i
 
 ## 2. Wiring
 While wiring, make sure the ESP32 is not connected to power. To wire the RFID to the ESP32, follow the wire diagram [here in Step 6](https://www.instructables.com/ESP32-With-RFID-Access-Control/). You can skip wiring of the LEDs. Note, the  ESP32 numbers are the 'D' numbers found on your board (18 means D18). 
-
+To wire the SD Card reader to the ESP32, follow the wiring diagram [here under "ESP32 with microSD Card Module- Schematic Diagram"](https://randomnerdtutorials.com/esp32-microsd-card-arduino/)
 
 ### 3. Setup Arduino IDE
 In the Arduino IDE, go to Tools > Board > Board Manger. Type in ESP32 and install esp32 by Espressif.  
@@ -71,6 +71,7 @@ Once the upload is complete, you can connect the ESP32 webserver by using anothe
     * https://www.instructables.com/ESP32-With-RFID-Access-Control/
     * https://github.com/miguelbalboa/rfid
     * https://github.com/miguelbalboa/rfid/blob/master/examples/ReadAndWrite/ReadAndWrite.ino
-
+* SD Card
+  * https://randomnerdtutorials.com/esp32-microsd-card-arduino/
 
 
