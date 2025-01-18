@@ -39,7 +39,7 @@ To wire the SD Card reader to the ESP32, follow the wiring diagram [here under "
 ### 3. Setup Arduino IDE
 In the Arduino IDE, go to Tools > Board > Board Manger. Type in ESP32 and install esp32 by Espressif.  
 
-Now plug in the ESP32 to your computer and click on the new port that is added under "Select Board" on the top bar. A window with “Select Other Board and Port” should pop up. Under boards, filter and select “ESP32-WROOOM-DA Module”. Then click okay.
+Now plug in the ESP32 to your computer and click on the new port that is added under "Select Board" on the top bar. A window with “Select Other Board and Port” should pop up. Under boards, filter and select “ESP32-WROOM-DA Module”. Then click okay.
 
 Go to library (book symbol on left bar) and search for and install the following libraries:
 * MFRC522 by GithubCommunity
