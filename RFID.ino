@@ -129,7 +129,6 @@ void read_data() {
   status = mfrc522.PCD_Authenticate(MFRC522::PICC_CMD_MF_AUTH_KEY_A, RFID_DATA_BLOCK, &key, &(mfrc522.uid)); //line 834 of MFRC522.cpp file
   if (status != MFRC522::STATUS_OK) {
     Serial.print("Authentication failed: " + String(mfrc522.GetStatusCodeName(status)));
-    // exit_card();
     return;
   }
 
@@ -137,7 +136,6 @@ void read_data() {
   status = mfrc522.MIFARE_Read(RFID_DATA_BLOCK, buffer, &size);
   if (status != MFRC522::STATUS_OK) {
     Serial.print("Reading failed: " + String(mfrc522.GetStatusCodeName(status)));
-    // exit_card();
     return;
   }
 
@@ -150,7 +148,6 @@ void read_data() {
   }
 
   data_string_read = data_string; // Copy so string isn't modified while reading
-  // exit_card();
   return;
 }
 
@@ -189,7 +186,6 @@ bool write_data() {
 
   if (status != MFRC522::STATUS_OK) {
     Serial.print("PCD_Authenticate() failed: " + String(mfrc522.GetStatusCodeName(status)));
-    // exit_card();
     return false;
   }
 
@@ -197,11 +193,9 @@ bool write_data() {
   status = mfrc522.MIFARE_Write(RFID_DATA_BLOCK, buffer, MAX_SIZE_BLOCK);
   if (status != MFRC522::STATUS_OK) {
     Serial.print("MIFARE_Write() failed: " + String(mfrc522.GetStatusCodeName(status)));
-    // exit_card();
     return false;
   }
 
-  // exit_card();
   return true;
 }
 
