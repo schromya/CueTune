@@ -47,9 +47,9 @@ Go to library (book symbol on left bar) and search for and install the following
 
 
 ## 4. Running
-To run this code, make sure the ESP32 is connected open this repo in the Arduino IDE and press Verify (the check) and Upload (the arrow).
+To run this code, make sure the ESP32 is connected, open this repo in the Arduino IDE, and press Verify (the check) and Upload (the arrow).
 
-Once the upload is complete, you can connect the ESP32 webserver by using another device (smartphone, computer, etc) to connect to the "CueTune" network. The password is "password" (I know, very secure :P). Once that device is connected, use a webrowser to navigate to 192.168.1.2 where you can access the simple website called "Cue Tune".
+Once the upload is complete, you can connect the ESP32 webserver by using another device (smartphone, computer, etc) to connect to the "CueTune" network. The password is "password" (I know, very secure :P). Once that device is connected (it is normal for this to take a while), use a webrowser to navigate to 192.168.1.2 where you can access the simple website called "Cue Tune".
 
 
 ## Troubleshooting

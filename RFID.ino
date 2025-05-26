@@ -12,15 +12,26 @@
 #define SIZE_BUFFER     18
 #define MAX_SIZE_BLOCK  16
 
+const byte RFID_DATA_BLOCK = 4;
+
 
 //used in authentication
 MFRC522::MIFARE_Key key;
 //authentication return status code
 MFRC522::StatusCode status;
 // Defined pins to module RC522
-MFRC522 mfrc522(SS_PIN, RST_PIN); 
+MFRC522 mfrc522(SS_PIN, RST_PIN);
 
-void RFID_setup()  {
+
+// Strings to write and read
+String data_string_read = "";
+String data_string_write = "";
+
+
+/*
+  PUBLIC FUNCTION. Should be called in the primary arduino setup.
+*/
+void rfid_setup()  {
   Serial.begin(9600);
   SPI.begin(); // Init SPI bus
   
@@ -30,14 +41,54 @@ void RFID_setup()  {
 }
 
 
+/*
+  PUBLIC FUNCTION. Should be called in the primary arduino loop.
+*/
+void rfid_loop()  {
+
+  // TODO PERHAPS REFACTOR TO EXIT AFTER BOTH INSTEAD
+  if (check_card()) {
+    read_data();
+    write_data();
+    exit_card();
+  }
+
+  if (check_card()) {
+
+  }
+
+}
+
+/*
+  PUBLIC FUNCTION. Returns the last string that was read when an RFID card was registered/tapped.
+*/
+String rfid_get_last_read() {
+  return data_string_read;
+}
+
+
+/*
+PUBLIC FUNCTION. The string passed to this will be written to the RFID card the next time
+it is registered/tapped.
+*/
+void rfid_set_next_write(String data_string) {
+  data_string_write = data_string;
+}
+
+
+
+/*
+ * Checks if card is valid to "connect" to.
+ * Returns true if card is valid, else false.
+ */
 bool check_card() {
-    // Reset the loop if no new card present on the sensor/reader. This saves the entire process when idle.
-    if ( ! mfrc522.PICC_IsNewCardPresent())
-        return false;
+
+    // Exit if no new card present on the sensor/reader. This saves the entire process when idle.
+    if ( ! mfrc522.PICC_IsNewCardPresent()) return false;
 
     // Select one of the cards
-    if ( ! mfrc522.PICC_ReadCardSerial())
-        return false;
+    if ( ! mfrc522.PICC_ReadCardSerial()) return false;
+
 
     // Check for compatibility
     MFRC522::PICC_Type piccType = mfrc522.PICC_GetType(mfrc522.uid.sak);
@@ -51,6 +102,10 @@ bool check_card() {
     return true;
 }
 
+
+/*
+ * Closes connection to RFID card.
+ */
 void exit_card() {
     //instructs the PICC when in the ACTIVE state to go to a "STOP" state
     mfrc522.PICC_HaltA(); 
@@ -63,32 +118,27 @@ void exit_card() {
  * Read Data from the RFID Card/Tag. If no data or cannot read card,
  * returns empty string.
  */
-String read_data() {
-
-  if (!check_card()) return "";
+void read_data() {
 
   //prepare the key - all keys are set to FFFFFFFFFFFFh
   for (byte i = 0; i < 6; i++) key.keyByte[i] = 0xFF;
   
   //buffer for read data
   byte buffer[SIZE_BUFFER] = {0};
- 
-  //the block to operate
-  byte block = 1;
   byte size = SIZE_BUFFER; //authenticates the block to operate
-  status = mfrc522.PCD_Authenticate(MFRC522::PICC_CMD_MF_AUTH_KEY_A, block, &key, &(mfrc522.uid)); //line 834 of MFRC522.cpp file
+  status = mfrc522.PCD_Authenticate(MFRC522::PICC_CMD_MF_AUTH_KEY_A, RFID_DATA_BLOCK, &key, &(mfrc522.uid)); //line 834 of MFRC522.cpp file
   if (status != MFRC522::STATUS_OK) {
     Serial.print("Authentication failed: " + String(mfrc522.GetStatusCodeName(status)));
-    exit_card();
-    return "";
+    // exit_card();
+    return;
   }
 
   //read data from block
-  status = mfrc522.MIFARE_Read(block, buffer, &size);
+  status = mfrc522.MIFARE_Read(RFID_DATA_BLOCK, buffer, &size);
   if (status != MFRC522::STATUS_OK) {
     Serial.print("Reading failed: " + String(mfrc522.GetStatusCodeName(status)));
-    exit_card();
-    return "";
+    // exit_card();
+    return;
   }
 
   // Convert buffer to String
@@ -99,9 +149,9 @@ String read_data() {
       }
   }
 
-
-  exit_card();
-  return data_string;
+  data_string_read = data_string; // Copy so string isn't modified while reading
+  // exit_card();
+  return;
 }
 
 
@@ -109,21 +159,21 @@ String read_data() {
  * Write inputed string to the RFID Card/Tag.
  * Returns true if write was successful, else false.
  */
-bool write_data(String str) {
+bool write_data() {
 
-  if (!check_card()) return false;
-
-  //prepare the key - all keys are set to FFFFFFFFFFFFh
-  for (byte i = 0; i < 6; i++) key.keyByte[i] = 0xFF;
-
+  if (data_string_write == "") return false;
+  String data_string = data_string_write;  // Copy so string isn't modified while writing
   
-  byte block; //the block to operate
+  //prepare the key - all keys are set to FFFFFFFFFFFF
+  for (byte i = 0; i < 6; i++) key.keyByte[i] = 0xFF;
+  
+  byte block = 1; //the block to operate
 
   byte buffer[MAX_SIZE_BLOCK] = "";
-  byte data_size = str.length();
+  byte data_size = data_string.length();
 
   for(byte i=0; i < data_size; i++) {
-    buffer[i] = str[i];
+    buffer[i] = data_string[i];
   }
  
   //void positions that are left in the buffer will be filled with whitespace
@@ -131,28 +181,27 @@ bool write_data(String str) {
     buffer[i] = ' ';
   }
  
-  block = 1; //the block to operate
-
+  
   //authenticates the block to operate
   //Authenticate is a command to hability a secure communication
-  status = mfrc522.PCD_Authenticate(MFRC522::PICC_CMD_MF_AUTH_KEY_A,
-                                    block, &key, &(mfrc522.uid));
+  status = mfrc522.PCD_Authenticate(MFRC522::PICC_CMD_MF_AUTH_KEY_A, 
+                                    RFID_DATA_BLOCK, &key, &(mfrc522.uid));
 
   if (status != MFRC522::STATUS_OK) {
     Serial.print("PCD_Authenticate() failed: " + String(mfrc522.GetStatusCodeName(status)));
-    exit_card();
+    // exit_card();
     return false;
   }
 
   //Writes in the block
-  status = mfrc522.MIFARE_Write(block, buffer, MAX_SIZE_BLOCK);
+  status = mfrc522.MIFARE_Write(RFID_DATA_BLOCK, buffer, MAX_SIZE_BLOCK);
   if (status != MFRC522::STATUS_OK) {
     Serial.print("MIFARE_Write() failed: " + String(mfrc522.GetStatusCodeName(status)));
-    exit_card();
+    // exit_card();
     return false;
   }
 
-  exit_card();
+  // exit_card();
   return true;
 }
 

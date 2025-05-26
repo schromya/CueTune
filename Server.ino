@@ -44,7 +44,6 @@ void handle_upload() {
   // Parse JSON
   DynamicJsonDocument data(1024);
   DeserializationError error = deserializeJson(data, body);
-
   if (error) {
     Serial.println("JSON Parsing Error: " + String(error.c_str()));
     server.send(400, "application/json", "{\"error\": \"Invalid JSON\"}");
@@ -52,14 +51,16 @@ void handle_upload() {
   }
   String str = data["data"];
 
-  bool success = write_data(str);
-  if (success) server.send(200, "application/json", "{\"data\": \"Uploaded data\"}");
-  else server.send(500, "application/json", "{\"data\": \"Error writing data\"}");
+  rfid_set_next_write(str);
+
+  Serial.println(F("Will upload data on next tap."));
+  server.send(200, "application/json", "{\"data\": \"Will upload data on next tap.\"}");
+
 }
 
 
 void handle_rfid() {
-  String data = read_data();
+  String data = rfid_get_last_read();
   server.send(200, "application/json", "{\"data\": \"" + data + "\"}");
 
 }
