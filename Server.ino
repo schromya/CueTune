@@ -88,8 +88,9 @@ String SendHTML(){
               <input type="text" id="rfid_input" />
 
               <button id="upload_button" type="button">Upload Data!</button>
+              <br>
+              <p> <b>Latest RFID Data:</b> <p>
               <p id="rfid_data"><p>
-              <button id="rfid_button" type="button">Get RFID data!</button>
           </div>
           <script>
             document.getElementById('upload_button').addEventListener('click', () => {
@@ -104,19 +105,25 @@ String SendHTML(){
               })
             });
 
-            document.getElementById('rfid_button').addEventListener('click', () => {
+            function poll_rfid() {
               fetch("rfid", {
                 headers: { "Content-Type": "application/json"},
                 method: "GET",
               })
               .then(res => {
-                  if (res.status != 200) alert("Sorry, there was an error uploading!")
-                  else return res.json();
+                  if (!res.ok) throw new Error("Fetch error");
+                  return res.json();
               })
               .then(json => {
-                document.getElementById('rfid_data').innerText = "Data:" + json.data;
+                document.getElementById('rfid_data').innerText = json.data;
               })
-            });
+              .catch(err => {
+                console.error("Polling error:", err);
+              });
+            }
+
+            setInterval(poll_rfid, 300);  // Poll every 300 ms
+
           </script>
       </body>
     </html>

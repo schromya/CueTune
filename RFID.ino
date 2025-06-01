@@ -46,8 +46,8 @@ void rfid_setup()  {
 */
 void rfid_loop()  {
   if (check_card()) {
-    read_data();
     write_data();
+    read_data();
     exit();
   }
 
