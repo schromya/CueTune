@@ -4,9 +4,9 @@ This is the start of an ESP32 music/audio player inspired by [PhonieBox](https:/
 
 
 ## Progress
-Starting to build simple server to display RFID data.
+Have simple server to read/write rfid data. Speaker also wired to beep when rfid tapped.
 
-NOTE: Will probably want to turn webserver into websocket.Z
+NOTE: Will probably want to turn webserver into websocket.
 
 
 ## 1. Prerequisites 
@@ -19,7 +19,10 @@ NOTE: Will probably want to turn webserver into websocket.Z
 | USB Micro Data Cables                                      | 1            |
 | RFID-RC522                                                 | 1            |
 | RFID Card/Chip                                             | At least 1   |
-| Micro SD SDHC TF Card  Reader                              | 1            |
+| 8 ohm (3 watt) Speaker                                     | 1            |
+| PAM8403 Digital Amplifier                                  | 1            |
+| MB Power Supply Module                                     | 1            |
+<!-- | Micro SD SDHC TF Card  Reader                              | 1            | -->
 
 ### b. Install required software
 Make sure you have the Arduino IDE. You may also need to install a UART Driver if the Arduino IDE does not recognize your ESP32 in Step 1c.
@@ -33,8 +36,15 @@ Make sure you have the Arduino IDE. You may also need to install a UART Driver i
 
 
 ## 2. Wiring
-While wiring, make sure the ESP32 is not connected to power. To wire the RFID to the ESP32, follow the wire diagram [here in Step 6](https://www.instructables.com/ESP32-With-RFID-Access-Control/). You can skip wiring of the LEDs. Note, the  ESP32 numbers are the 'D' numbers found on your board (18 means D18). 
-To wire the SD Card reader to the ESP32, follow the wiring diagram [here under "ESP32 with microSD Card Module- Schematic Diagram"](https://randomnerdtutorials.com/esp32-microsd-card-arduino/)
+While wiring, make sure the ESP32 is not connected to power (including usb).
+
+To wire the RFID to the ESP32, follow the wire diagram [here in Step 6](https://www.instructables.com/ESP32-With-RFID-Access-Control/). You can skip wiring of the LEDs. Note, the  ESP32 numbers are the 'D' numbers found on your board (18 means D18). 
+
+<!-- To wire the SD Card reader to the ESP32, follow the wiring diagram [here under "ESP32 with microSD Card Module- Schematic Diagram"](https://randomnerdtutorials.com/esp32-microsd-card-arduino/) -->
+
+Solder the speaker's red wire to to the amplifier's L(eft) "+" and the black wire to the amplifier's L(eft) "-". Wire the amplifier's 5V "+" to the 5V "+" of the power supply and wire the 5V "-" to the 5V "-" of the power supply. Wire the amplifier's "G" to the same "-". Wire the amplifier's "L" to D2.
+
+<img src="docs/wiring.jpg" alt="wiring_picture" width="500"/>
 
 ### 3. Setup Arduino IDE
 In the Arduino IDE, go to Tools > Board > Board Manger. Type in ESP32 and install esp32 by Espressif.  

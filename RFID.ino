@@ -3,8 +3,8 @@
   https://www.instructables.com/ESP32-With-RFID-Access-Control/
 */
 
-#include <MFRC522.h> //library responsible for communicating with the module RFID-RC522
-#include <SPI.h> //library responsible for communicating of SPI bus
+#include <MFRC522.h>
+#include <SPI.h>
 
 #define SS_PIN    21
 #define RST_PIN   22
@@ -45,16 +45,10 @@ void rfid_setup()  {
   PUBLIC FUNCTION. Should be called in the primary arduino loop.
 */
 void rfid_loop()  {
-
-  // TODO PERHAPS REFACTOR TO EXIT AFTER BOTH INSTEAD
   if (check_card()) {
     read_data();
     write_data();
-    exit_card();
-  }
-
-  if (check_card()) {
-
+    exit();
   }
 
 }
@@ -74,7 +68,6 @@ it is registered/tapped.
 void rfid_set_next_write(String data_string) {
   data_string_write = data_string;
 }
-
 
 
 /*
@@ -99,18 +92,9 @@ bool check_card() {
         return false;
     }
 
+    speaker_beep();
+
     return true;
-}
-
-
-/*
- * Closes connection to RFID card.
- */
-void exit_card() {
-    //instructs the PICC when in the ACTIVE state to go to a "STOP" state
-    mfrc522.PICC_HaltA(); 
-    // "stop" the encryption of the PCD, it must be called after communication with authentication, otherwise new communications can not be initiated
-    mfrc522.PCD_StopCrypto1();  
 }
 
 
@@ -118,25 +102,19 @@ void exit_card() {
  * Read Data from the RFID Card/Tag. If no data or cannot read card,
  * returns empty string.
  */
-void read_data() {
+bool read_data() {
 
-  //prepare the key - all keys are set to FFFFFFFFFFFFh
-  for (byte i = 0; i < 6; i++) key.keyByte[i] = 0xFF;
-  
+  if (! authenticate()) return false;
+
   //buffer for read data
   byte buffer[SIZE_BUFFER] = {0};
-  byte size = SIZE_BUFFER; //authenticates the block to operate
-  status = mfrc522.PCD_Authenticate(MFRC522::PICC_CMD_MF_AUTH_KEY_A, RFID_DATA_BLOCK, &key, &(mfrc522.uid)); //line 834 of MFRC522.cpp file
-  if (status != MFRC522::STATUS_OK) {
-    Serial.print("Authentication failed: " + String(mfrc522.GetStatusCodeName(status)));
-    return;
-  }
+  byte size = SIZE_BUFFER;
 
   //read data from block
   status = mfrc522.MIFARE_Read(RFID_DATA_BLOCK, buffer, &size);
   if (status != MFRC522::STATUS_OK) {
-    Serial.print("Reading failed: " + String(mfrc522.GetStatusCodeName(status)));
-    return;
+    Serial.println("Reading failed: " + String(mfrc522.GetStatusCodeName(status)));
+    return false;
   }
 
   // Convert buffer to String
@@ -148,7 +126,8 @@ void read_data() {
   }
 
   data_string_read = data_string; // Copy so string isn't modified while reading
-  return;
+  Serial.println("Read RFID: " + data_string_read);
+  return true;
 }
 
 
@@ -161,11 +140,8 @@ bool write_data() {
   if (data_string_write == "") return false;
   String data_string = data_string_write;  // Copy so string isn't modified while writing
   
-  //prepare the key - all keys are set to FFFFFFFFFFFF
-  for (byte i = 0; i < 6; i++) key.keyByte[i] = 0xFF;
+  if (! authenticate()) return false;
   
-  byte block = 1; //the block to operate
-
   byte buffer[MAX_SIZE_BLOCK] = "";
   byte data_size = data_string.length();
 
@@ -177,26 +153,47 @@ bool write_data() {
   for(byte i=data_size; i < MAX_SIZE_BLOCK; i++) {
     buffer[i] = ' ';
   }
- 
-  
-  //authenticates the block to operate
-  //Authenticate is a command to hability a secure communication
-  status = mfrc522.PCD_Authenticate(MFRC522::PICC_CMD_MF_AUTH_KEY_A, 
-                                    RFID_DATA_BLOCK, &key, &(mfrc522.uid));
-
-  if (status != MFRC522::STATUS_OK) {
-    Serial.print("PCD_Authenticate() failed: " + String(mfrc522.GetStatusCodeName(status)));
-    return false;
-  }
 
   //Writes in the block
   status = mfrc522.MIFARE_Write(RFID_DATA_BLOCK, buffer, MAX_SIZE_BLOCK);
   if (status != MFRC522::STATUS_OK) {
-    Serial.print("MIFARE_Write() failed: " + String(mfrc522.GetStatusCodeName(status)));
+    Serial.println("MIFARE_Write() failed: " + String(mfrc522.GetStatusCodeName(status)));
     return false;
   }
 
   return true;
+}
+
+
+/*
+ * Authenticates tag.
+ * Returns true if authentication was successful, else false.
+*/
+bool authenticate() {
+  //prepare the key - all keys are set to FFFFFFFFFFFF
+  for (byte i = 0; i < 6; i++) key.keyByte[i] = 0xFF;
+
+  // Authenticates the block to operate
+  status = mfrc522.PCD_Authenticate(MFRC522::PICC_CMD_MF_AUTH_KEY_A, 
+                                    RFID_DATA_BLOCK, &key, &(mfrc522.uid));
+
+  if (status != MFRC522::STATUS_OK) {
+    Serial.println("PCD_Authenticate() failed: " + String(mfrc522.GetStatusCodeName(status)));
+    return false;
+  }
+
+  return true;
+}
+
+
+/*
+ * Closes connection to RFID card.
+ */
+void exit() {
+    //instructs the PICC when in the ACTIVE state to go to a "STOP" state
+    mfrc522.PICC_HaltA(); 
+    // "stop" the encryption of the PCD, it must be called after communication with authentication, otherwise new communications can not be initiated
+    mfrc522.PCD_StopCrypto1();  
 }
 
 
