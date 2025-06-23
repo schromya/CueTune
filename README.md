@@ -22,7 +22,8 @@ NOTE: Will probably want to turn webserver into websocket.
 | 8 ohm (3 watt) Speaker                                     | 1            |
 | PAM8403 Digital Amplifier                                  | 1            |
 | MB Power Supply Module                                     | 1            |
-<!-- | Micro SD SDHC TF Card  Reader                              | 1            | -->
+| Micro SD SDHC TF Card  Reader                              | 1            |
+| Micro SD Card (at least 1 GB for storing audio files)      | 1            |
 
 ### b. Install required software
 Make sure you have the Arduino IDE. You may also need to install a UART Driver if the Arduino IDE does not recognize your ESP32 in Step 1c.
@@ -40,9 +41,20 @@ While wiring, make sure the ESP32 is not connected to power (including usb).
 
 To wire the RFID to the ESP32, follow the wire diagram [here in Step 6](https://www.instructables.com/ESP32-With-RFID-Access-Control/). You can skip wiring of the LEDs. Note, the  ESP32 numbers are the 'D' numbers found on your board (18 means D18). 
 
-<!-- To wire the SD Card reader to the ESP32, follow the wiring diagram [here under "ESP32 with microSD Card Module- Schematic Diagram"](https://randomnerdtutorials.com/esp32-microsd-card-arduino/) -->
+For the speaker, solder the speaker's red wire to to the amplifier's L(eft) "+" and the black wire to the amplifier's L(eft) "-". Wire the amplifier's 5V "+" to the 5V "+" of the power supply and wire the 5V "-" to the 5V "-" of the power supply. Wire the amplifier's "G" to the same "-". Wire the amplifier's "L" to D2.
 
-Solder the speaker's red wire to to the amplifier's L(eft) "+" and the black wire to the amplifier's L(eft) "-". Wire the amplifier's 5V "+" to the 5V "+" of the power supply and wire the 5V "-" to the 5V "-" of the power supply. Wire the amplifier's "G" to the same "-". Wire the amplifier's "L" to D2.
+Wire the SD Card reader to the ESP32 as shown below:
+| MicroSD card module | ESP32           |
+|---------------------|-----------------|
+| 3V3                 | 3.3V            |
+| CS                  | GPIO 33 (D33)   |
+| MOSI                | GPIO 32 (D32)   |
+| CLK                 | GPIO 35 (D35)   |
+| MISO                | GPIO 34 (D34)   |
+| GND                 | GND             |
+
+Make sure the SD card you will be using is formatted as FAT32 (you can reference [this guide](https://itsfoss.com/format-usb-drive-sd-card-ubuntu/) for formatting).
+
 
 <img src="docs/wiring.jpg" alt="wiring_picture" width="500"/>
 
